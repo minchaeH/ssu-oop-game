@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --game-sky: #5bc0de;
+  --game-sky-dark: #3a8eab;
+}
+
+body {
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+@layer components {
+  .game-modal {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .game-modal-sm {
+    @apply rounded-2xl bg-black/70 backdrop-blur-sm;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  .game-btn:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
+
+  .game-highlight {
+    @apply font-bold text-yellow-400;
+  }
+
+  .game-subtext {
+    @apply text-sm leading-relaxed text-white/90;
+  }
+
+  .vn-dialogue-panel {
+    @apply w-full rounded-2xl border border-slate-500 px-5 py-4 text-left shadow-2xl;
+    background: linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.92) 0%,
+      rgba(30, 41, 59, 0.88) 50%,
+      rgba(15, 23, 42, 0.94) 100%
+    );
+    box-shadow:
+      0 -4px 24px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(148, 163, 184, 0.15);
+  }
+
+  .vn-bubble {
+    @apply game-modal-sm rounded-2xl border border-white/20 px-3 py-2 text-white shadow-lg;
+    position: relative;
+  }
+
+  .vn-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.65);
+  }
+
+  .vn-bubble-random {
+    animation: bubble-pop 0.4s ease-out, glow-pulse 1s ease-in-out infinite;
+    @apply border-yellow-400/70;
+  }
+
+  .vn-float-text {
+    animation: float-up 1.2s ease-out forwards;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .vn-card-sparkle {
+    animation: sparkle 0.6s ease-in-out infinite;
+    box-shadow:
+      0 0 20px rgba(250, 204, 21, 0.6),
+      0 0 40px rgba(250, 204, 21, 0.3);
+  }
+
+  .vn-desk-sparkle {
+    box-shadow: inset 0 0 24px rgba(250, 204, 21, 0.15);
+  }
+
+  .vn-random-border {
+    box-shadow:
+      inset 0 0 0 4px rgba(250, 204, 21, 0.35),
+      inset 0 0 60px rgba(250, 204, 21, 0.08);
+    animation: border-flash 1.2s ease-in-out infinite;
+  }
+
+  .vn-fade-overlay.vn-fade-out {
+    animation: fade-to-black 0.45s ease-in forwards;
+  }
+
+  .vn-fade-overlay.vn-fade-in {
+    animation: fade-from-black 0.45s ease-out forwards;
+    opacity: 1;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.85);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-28px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-48px) scale(0.9);
+  }
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.35);
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(250, 204, 21, 0.8);
+  }
+}
+
+@keyframes border-flash {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 3px rgba(250, 204, 21, 0.25),
+      inset 0 0 40px rgba(250, 204, 21, 0.05);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 5px rgba(250, 204, 21, 0.55),
+      inset 0 0 80px rgba(250, 204, 21, 0.12);
+  }
+}
+
+@keyframes bubble-pop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-to-black {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-from-black {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
