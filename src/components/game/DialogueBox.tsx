@@ -5,10 +5,9 @@ import type { DialogueLine } from "@/lib/game";
 interface DialogueBoxProps {
   line: DialogueLine | null;
   hint?: string;
-  autoPlay?: boolean;
 }
 
-export function DialogueBox({ line, hint, autoPlay = false }: DialogueBoxProps) {
+export function DialogueBox({ line, hint }: DialogueBoxProps) {
   const kindLabel =
     line?.kind === "random"
       ? "✨ 랜덤 이벤트"
@@ -37,12 +36,6 @@ export function DialogueBox({ line, hint, autoPlay = false }: DialogueBoxProps) 
         </>
       ) : (
         <p className="text-white/60">{hint ?? "…"}</p>
-      )}
-      {autoPlay && (
-        <p className="mt-3 flex items-center justify-end gap-2 text-xs text-yellow-400/90">
-          <span className="inline-block h-2 w-2 animate-ping rounded-full bg-[#5BC0DE]" />
-          자동 진행 중… 🍿
-        </p>
       )}
     </div>
   );

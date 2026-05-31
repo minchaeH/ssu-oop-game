@@ -29,7 +29,7 @@ export function RulesScene({ onStartRound }: RulesSceneProps) {
             총 {TOTAL_ROUNDS}번의 사이클이 돌아갑니다.
           </p>
           <p className="game-subtext text-sm">
-            캐릭터 대사는 자동으로 순차 재생됩니다. (약 1.5초 간격)
+            캐릭터를 클릭해 공부·시험을 진행합니다.
             <br />
             공부 시간에는 30% 확률로 랜덤 이벤트가 발생합니다.
           </p>

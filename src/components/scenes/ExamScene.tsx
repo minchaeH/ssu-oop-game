@@ -16,11 +16,11 @@ interface ExamSceneProps {
   dialogue: DialogueLine | null;
   floatingPopups: FloatingPopup[];
   randomEventActive: boolean;
-  examPhaseDone: boolean;
   isFinalRound: boolean;
   fadePhase: FadePhase;
   fadeLabel?: string;
-  onNextRound: () => void;
+  onCharacterClick: (index: number) => void;
+  onFinishRound: () => void;
   onViewEnding: () => void;
 }
 
@@ -31,22 +31,23 @@ export function ExamScene({
   dialogue,
   floatingPopups,
   randomEventActive,
-  examPhaseDone,
   isFinalRound,
   fadePhase,
   fadeLabel,
-  onNextRound,
+  onCharacterClick,
+  onFinishRound,
   onViewEnding,
 }: ExamSceneProps) {
   const randomStudentIndex =
     dialogue?.kind === "random" ? dialogue.studentIndex : -1;
+  const transitioning = fadePhase !== "none";
 
   return (
     <IngameShell
       bgVariant="exam"
       round={round}
       title="📝 시험 시간"
-      subtitle="자동 진행 컷신"
+      subtitle="캐릭터를 클릭해 시험을 보세요"
       fadePhase={fadePhase}
       fadeLabel={fadeLabel}
       randomEventActive={randomEventActive}
@@ -60,25 +61,28 @@ export function ExamScene({
             floatingPopups={floatingPopups}
             randomEventActive={randomEventActive}
             randomEventStudentIndex={randomStudentIndex}
+            onCharacterClick={onCharacterClick}
+            disabled={transitioning}
           />
         }
         footer={
           <div className="space-y-4">
             <DialogueBox
               line={dialogue}
-              hint="시험지가 배포되었습니다…"
-              autoPlay={!examPhaseDone}
+              hint="캐릭터를 클릭하면 시험 결과가 표시됩니다."
             />
 
-            {examPhaseDone && (
-              <div className="flex justify-center animate-[fadeIn_0.5s_ease-out]">
-                {isFinalRound ? (
-                  <SceneButton onClick={onViewEnding}>최종 결과 보기</SceneButton>
-                ) : (
-                  <SceneButton onClick={onNextRound}>다음 라운드 시작</SceneButton>
-                )}
-              </div>
-            )}
+            <div className="flex justify-center">
+              {isFinalRound ? (
+                <SceneButton onClick={onViewEnding} disabled={transitioning}>
+                  최종 결과 보기
+                </SceneButton>
+              ) : (
+                <SceneButton onClick={onFinishRound} disabled={transitioning}>
+                  다음 라운드로
+                </SceneButton>
+              )}
+            </div>
           </div>
         }
       />

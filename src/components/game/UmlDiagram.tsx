@@ -1,5 +1,27 @@
 export function UmlDiagram() {
-  const childClasses = ["GPTAddict", "CoffeeLover", "Bokhaksaeng"];
+  const childClasses = [
+    {
+      name: "GPTAddict",
+      overrides: [
+        "+ study() : 지능↑ 멘탈 방어",
+        "+ take_exam() : 다형성 (대박 or 서버다운)",
+      ],
+    },
+    {
+      name: "CoffeeLover",
+      overrides: [
+        "+ study() : 지능 폭발, 멘탈 극소모",
+        "+ take_exam() : 다형성 (각성 or 크래시)",
+      ],
+    },
+    {
+      name: "Bokhaksaeng",
+      overrides: [
+        "+ study() : 멘탈 회복",
+        "+ take_exam() : 다형성 (멘탈 비례 보너스)",
+      ],
+    },
+  ] as const;
 
   return (
     <div
@@ -20,6 +42,10 @@ export function UmlDiagram() {
         <p className="text-[10px] uppercase tracking-widest text-[#5BC0DE]">class</p>
         <p className="text-base font-bold text-white">StudentBase</p>
         <p className="mt-0.5 text-[10px] text-white/60">implements StudentADT</p>
+        <ul className="mt-2 space-y-0.5 text-left text-xs text-gray-400">
+          <li>+ study() : 기본 지능/멘탈 증감 로직</li>
+          <li>+ take_exam() : 기본 시험 진행 로직</li>
+        </ul>
       </div>
 
       <div className="relative mx-auto my-1 h-6 w-[85%]">
@@ -30,13 +56,18 @@ export function UmlDiagram() {
       </div>
 
       <div className="grid grid-cols-3 gap-1.5">
-        {childClasses.map((name) => (
+        {childClasses.map(({ name, overrides }) => (
           <div
             key={name}
             className="game-modal-sm rounded-lg border border-emerald-400/40 px-1.5 py-2 text-center"
           >
             <p className="text-[8px] text-emerald-300/80">extends</p>
             <p className="text-[10px] font-semibold text-white sm:text-xs">{name}</p>
+            <ul className="mt-2 space-y-0.5 text-left text-xs text-gray-400">
+              {overrides.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
           </div>
         ))}
       </div>

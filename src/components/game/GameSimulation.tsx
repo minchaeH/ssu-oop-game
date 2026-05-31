@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { TitleScene } from "@/components/scenes/TitleScene";
 import { RulesScene } from "@/components/scenes/RulesScene";
 import { StudyScene } from "@/components/scenes/StudyScene";
@@ -8,14 +8,11 @@ import { ExamScene } from "@/components/scenes/ExamScene";
 import { EndingScene } from "@/components/scenes/EndingScene";
 import type { FadePhase } from "@/components/game/SceneTransitionOverlay";
 import {
-  AUTO_PLAY_MS,
   TOTAL_ROUNDS,
-  buildExamTurnLines,
-  buildStudyTurnLines,
   deltasToLabels,
   professorExamIntro,
-  professorRoundEnd,
   professorStudyIntro,
+  runCharacterAction,
   type DialogueLine,
   type FloatingPopup,
   type SceneId,
@@ -36,21 +33,14 @@ function systemLine(text: string): DialogueLine {
   };
 }
 
-type PhaseMode = "study" | "exam";
-
 export function GameSimulation() {
   const [scene, setScene] = useState<SceneId>("title");
   const [round, setRound] = useState(1);
   const [students, setStudents] = useState<StudentSlot[]>(createInitialStudents);
   const [statsTick, setStatsTick] = useState(0);
 
-  const [studentTurnIndex, setStudentTurnIndex] = useState(0);
-  const [dialogueQueue, setDialogueQueue] = useState<DialogueLine[]>([]);
-  const [queueIndex, setQueueIndex] = useState(0);
   const [dialogue, setDialogue] = useState<DialogueLine | null>(null);
-  const [canAdvance, setCanAdvance] = useState(false);
-  const [awaitingPhaseIntro, setAwaitingPhaseIntro] = useState(false);
-  const [examPhaseDone, setExamPhaseDone] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   const [fadePhase, setFadePhase] = useState<FadePhase>("none");
   const [fadeLabel, setFadeLabel] = useState<string | undefined>();
@@ -78,38 +68,18 @@ export function GameSimulation() {
   const showLine = useCallback(
     (line: DialogueLine) => {
       setDialogue(line);
-      setCanAdvance(true);
       bumpStats();
       spawnFloating(line);
-
-      if (line.kind === "random") {
-        setRandomEventActive(true);
-      }
+      setRandomEventActive(line.kind === "random");
     },
     [bumpStats, spawnFloating],
   );
 
-  const loadStudentTurn = useCallback(
-    (index: number, mode: PhaseMode, slots: StudentSlot[]) => {
-      const slot = slots[index];
-      const lines =
-        mode === "study"
-          ? buildStudyTurnLines(slot, index)
-          : buildExamTurnLines(slot, index);
-
-      setStudentTurnIndex(index);
-      setDialogueQueue(lines);
-      setQueueIndex(0);
-      showLine(lines[0]);
-    },
-    [showLine],
-  );
-
   const openPhase = useCallback(
-    (mode: PhaseMode, currentRound: number) => {
-      setAwaitingPhaseIntro(true);
-      setExamPhaseDone(false);
+    (mode: "study" | "exam", currentRound: number) => {
       setScene(mode);
+      setActiveIndex(-1);
+      setRandomEventActive(false);
       const intro =
         mode === "study"
           ? professorStudyIntro(currentRound)
@@ -135,7 +105,6 @@ export function GameSimulation() {
 
   const runSceneTransition = useCallback(
     (label: string, onMid: () => void) => {
-      setCanAdvance(false);
       setFadePhase("out");
 
       window.setTimeout(() => {
@@ -154,95 +123,41 @@ export function GameSimulation() {
     [],
   );
 
-  const advanceDialogue = useCallback(() => {
-    if (!canAdvance || fadePhase !== "none") return;
-    setCanAdvance(false);
+  const handleCharacterClick = useCallback(
+    (index: number) => {
+      if (fadePhase !== "none") return;
+      if (scene !== "study" && scene !== "exam") return;
 
-    if (dialogue?.kind !== "random") {
-      setRandomEventActive(false);
-    }
+      const slot = students[index];
+      const mode = scene === "study" ? "study" : "exam";
+      const line = runCharacterAction(slot, index, mode);
 
-    if (awaitingPhaseIntro) {
-      setAwaitingPhaseIntro(false);
-      const mode: PhaseMode = scene === "study" ? "study" : "exam";
-      loadStudentTurn(0, mode, students);
+      setActiveIndex(index);
+      showLine(line);
+    },
+    [fadePhase, scene, students, showLine],
+  );
+
+  const handleGoToExam = useCallback(() => {
+    if (fadePhase !== "none") return;
+    runSceneTransition("교실 → 강의실", () => beginExamPhase(round));
+  }, [fadePhase, round, beginExamPhase, runSceneTransition]);
+
+  const handleFinishRound = useCallback(() => {
+    if (fadePhase !== "none") return;
+    if (round >= TOTAL_ROUNDS) {
+      setScene("ending");
       return;
     }
+    const nextRound = round + 1;
+    setRound(nextRound);
+    runSceneTransition("강의실 → 교실", () => beginStudyPhase(nextRound));
+  }, [fadePhase, round, beginStudyPhase, runSceneTransition]);
 
-    const mode: PhaseMode = scene === "study" ? "study" : "exam";
-
-    if (queueIndex < dialogueQueue.length - 1) {
-      const nextIdx = queueIndex + 1;
-      setQueueIndex(nextIdx);
-      showLine(dialogueQueue[nextIdx]);
-      return;
-    }
-
-    const nextStudent = studentTurnIndex + 1;
-    if (nextStudent < students.length) {
-      loadStudentTurn(nextStudent, mode, students);
-      return;
-    }
-
-    if (mode === "study") {
-      setDialogue(null);
-      setRandomEventActive(false);
-      runSceneTransition("교실 → 강의실", () => beginExamPhase(round));
-      return;
-    }
-
-    setExamPhaseDone(true);
-    setRandomEventActive(false);
-    showLine(
-      systemLine(professorRoundEnd(round, round < TOTAL_ROUNDS)),
-    );
-    setCanAdvance(false);
-  }, [
-    canAdvance,
-    fadePhase,
-    dialogue,
-    awaitingPhaseIntro,
-    scene,
-    queueIndex,
-    dialogueQueue,
-    studentTurnIndex,
-    students,
-    loadStudentTurn,
-    beginExamPhase,
-    round,
-    showLine,
-    runSceneTransition,
-  ]);
-
-  const advanceRef = useRef(advanceDialogue);
-  advanceRef.current = advanceDialogue;
-
-  useEffect(() => {
-    if (scene !== "study" && scene !== "exam") return;
-    if (!canAdvance || fadePhase !== "none" || examPhaseDone) return;
-
-    const timer = window.setTimeout(() => {
-      advanceRef.current();
-    }, AUTO_PLAY_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [
-    scene,
-    canAdvance,
-    fadePhase,
-    examPhaseDone,
-    dialogue,
-    queueIndex,
-    studentTurnIndex,
-    awaitingPhaseIntro,
-    round,
-  ]);
-
-  useEffect(() => {
-    if (dialogue?.kind !== "random") return;
-    const timer = window.setTimeout(() => setRandomEventActive(false), AUTO_PLAY_MS);
-    return () => window.clearTimeout(timer);
-  }, [dialogue]);
+  const handleViewEnding = useCallback(() => {
+    if (fadePhase !== "none") return;
+    setScene("ending");
+  }, [fadePhase]);
 
   const handleTitleStart = () => setScene("rules");
 
@@ -250,43 +165,25 @@ export function GameSimulation() {
     setRound(1);
     setStudents(createInitialStudents());
     setStatsTick(0);
-    setExamPhaseDone(false);
+    setDialogue(null);
+    setActiveIndex(-1);
     setFloatingPopups([]);
     setRandomEventActive(false);
     beginStudyPhase(1);
   };
-
-  const handleNextRound = () => {
-    const nextRound = round + 1;
-    setRound(nextRound);
-    setExamPhaseDone(false);
-    runSceneTransition("강의실 → 교실", () => beginStudyPhase(nextRound));
-  };
-
-  const handleViewEnding = () => setScene("ending");
 
   const handleRestart = () => {
     setScene("title");
     setRound(1);
     setStudents(createInitialStudents());
     setStatsTick(0);
-    setStudentTurnIndex(0);
     setDialogue(null);
-    setDialogueQueue([]);
-    setQueueIndex(0);
-    setCanAdvance(false);
-    setAwaitingPhaseIntro(false);
-    setExamPhaseDone(false);
+    setActiveIndex(-1);
     setFadePhase("none");
     setFadeLabel(undefined);
     setFloatingPopups([]);
     setRandomEventActive(false);
   };
-
-  const activeIndex =
-    dialogue && dialogue.kind !== "system" && dialogue.studentIndex >= 0
-      ? dialogue.studentIndex
-      : -1;
 
   void statsTick;
 
@@ -309,6 +206,8 @@ export function GameSimulation() {
         randomEventActive={randomEventActive}
         fadePhase={fadePhase}
         fadeLabel={fadeLabel}
+        onCharacterClick={handleCharacterClick}
+        onGoToExam={handleGoToExam}
       />
     );
   }
@@ -322,11 +221,11 @@ export function GameSimulation() {
         dialogue={dialogue}
         floatingPopups={floatingPopups}
         randomEventActive={randomEventActive}
-        examPhaseDone={examPhaseDone}
         isFinalRound={round >= TOTAL_ROUNDS}
         fadePhase={fadePhase}
         fadeLabel={fadeLabel}
-        onNextRound={handleNextRound}
+        onCharacterClick={handleCharacterClick}
+        onFinishRound={handleFinishRound}
         onViewEnding={handleViewEnding}
       />
     );

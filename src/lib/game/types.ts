@@ -25,8 +25,6 @@ export interface FloatingPopup {
   labels: string[];
 }
 
-export const AUTO_PLAY_MS = 1500;
-
 export interface GameSnapshot {
   scene: SceneId;
   round: number;
