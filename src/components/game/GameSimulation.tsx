@@ -150,8 +150,10 @@ export function GameSimulation() {
       return;
     }
     const nextRound = round + 1;
-    setRound(nextRound);
-    runSceneTransition("강의실 → 교실", () => beginStudyPhase(nextRound));
+    runSceneTransition("강의실 → 교실", () => {
+      setRound(nextRound);
+      beginStudyPhase(nextRound);
+    });
   }, [fadePhase, round, beginStudyPhase, runSceneTransition]);
 
   const handleViewEnding = useCallback(() => {
@@ -221,7 +223,7 @@ export function GameSimulation() {
         dialogue={dialogue}
         floatingPopups={floatingPopups}
         randomEventActive={randomEventActive}
-        isFinalRound={round >= TOTAL_ROUNDS}
+        isFinalRound={round === TOTAL_ROUNDS}
         fadePhase={fadePhase}
         fadeLabel={fadeLabel}
         onCharacterClick={handleCharacterClick}

@@ -7,6 +7,7 @@ import { IngameShell } from "@/components/game/IngameShell";
 import { SceneButton } from "@/components/game/SceneButton";
 import type { FadePhase } from "@/components/game/SceneTransitionOverlay";
 import type { DialogueLine, FloatingPopup } from "@/lib/game";
+import { TOTAL_ROUNDS } from "@/lib/game";
 import type { StudentSlot } from "@/lib/students";
 
 interface ExamSceneProps {
@@ -41,6 +42,9 @@ export function ExamScene({
   const randomStudentIndex =
     dialogue?.kind === "random" ? dialogue.studentIndex : -1;
   const transitioning = fadePhase !== "none";
+  const showFinalResults = isFinalRound && round === TOTAL_ROUNDS && !transitioning;
+  const continueLabel =
+    round === TOTAL_ROUNDS - 1 ? "3차전 시작하기" : "다음 라운드로";
 
   return (
     <IngameShell
@@ -73,13 +77,13 @@ export function ExamScene({
             />
 
             <div className="flex justify-center">
-              {isFinalRound ? (
+              {showFinalResults ? (
                 <SceneButton onClick={onViewEnding} disabled={transitioning}>
                   최종 결과 보기
                 </SceneButton>
               ) : (
                 <SceneButton onClick={onFinishRound} disabled={transitioning}>
-                  다음 라운드로
+                  {continueLabel}
                 </SceneButton>
               )}
             </div>
